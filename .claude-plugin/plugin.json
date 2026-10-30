@@ -1,0 +1,20 @@
+{
+  "name": "shopify-checkout-recs",
+  "description": "Skill for building Shopify Checkout UI Extensions that show third-party recommendations/upsells (Rebuy, Nosto, Algolia, custom) via a backend proxy — keeps the API key server-side, handles CORS, validates variants, and adds to cart safely.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Andrew Rico"
+  },
+  "homepage": "https://github.com/Andrewrico/shopify-checkout-extensions",
+  "repository": "https://github.com/Andrewrico/shopify-checkout-extensions",
+  "license": "MIT",
+  "keywords": [
+    "shopify",
+    "checkout-ui-extension",
+    "recommendations",
+    "upsell",
+    "rebuy",
+    "backend-proxy",
+    "skills"
+  ]
+}

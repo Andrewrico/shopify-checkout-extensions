@@ -1,0 +1,83 @@
+name: Sync Shopify template
+
+# Pulls new commits from Shopify's app template into a pull request.
+# Never pushes to main. Conflicts open an issue instead of a PR.
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Mondays 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  UPSTREAM_URL: https://github.com/Shopify/shopify-app-template-remix.git
+  UPSTREAM_BRANCH: main
+  SYNC_BRANCH: sync/shopify-template
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # README.md is ours (see .gitattributes); "true" makes the merge keep our side.
+          git config merge.ours.driver true
+
+      - name: Fetch upstream
+        run: |
+          git remote add shopify "$UPSTREAM_URL"
+          git fetch shopify "$UPSTREAM_BRANCH"
+
+      - name: Merge upstream
+        id: merge
+        run: |
+          if git merge-base --is-ancestor "shopify/$UPSTREAM_BRANCH" HEAD; then
+            echo "status=current" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git checkout -B "$SYNC_BRANCH"
+          if git merge --no-edit -m "Merge Shopify app template updates" "shopify/$UPSTREAM_BRANCH"; then
+            echo "status=clean" >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "status=conflict"
+              echo "files<<EOF"
+              git diff --name-only --diff-filter=U
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            git merge --abort
+          fi
+
+      - name: Open pull request
+        if: steps.merge.outputs.status == 'clean'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push --force origin "$SYNC_BRANCH"
+          if [ -z "$(gh pr list --head "$SYNC_BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr create --base "${{ github.event.repository.default_branch }}" --head "$SYNC_BRANCH" \
+              --title "Sync Shopify app template updates" \
+              --body "New commits from $UPSTREAM_URL merged cleanly. Review the diff, run \`npm run build\`, then merge."
+          fi
+
+      - name: Open conflict issue
+        if: steps.merge.outputs.status == 'conflict'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FILES: ${{ steps.merge.outputs.files }}
+        run: |
+          title="Shopify template update has merge conflicts"
+          body=$(printf 'Upstream changes could not merge automatically. Conflicting files:\n\n%s\n\nRun locally:\n\n    git fetch shopify && git merge shopify/%s\n' "$FILES" "$UPSTREAM_BRANCH")
+          if [ -z "$(gh issue list --state open --search "$title in:title" --json number --jq '.[].number')" ]; then
+            gh issue create --title "$title" --body "$body"
+          fi

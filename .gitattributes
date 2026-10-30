@@ -1,0 +1,2 @@
+# Keep our README when merging Shopify's template updates (see .github/workflows/sync-shopify-template.yml).
+README.md merge=ours

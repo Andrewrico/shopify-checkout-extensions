@@ -1,0 +1,27 @@
+{
+  "name": "shopify-checkout-recs-marketplace",
+  "description": "Marketplace for the Shopify checkout recommendations skill plugin",
+  "owner": {
+    "name": "Andrew Rico"
+  },
+  "plugins": [
+    {
+      "name": "shopify-checkout-recs",
+      "source": "./",
+      "description": "Skill for building Shopify Checkout UI Extensions that show third-party recommendations/upsells via a backend proxy.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Andrew Rico"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/Andrewrico/shopify-checkout-extensions",
+      "keywords": [
+        "shopify",
+        "checkout-ui-extension",
+        "recommendations",
+        "upsell",
+        "rebuy"
+      ]
+    }
+  ]
+}
