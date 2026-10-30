@@ -65,9 +65,12 @@ jobs:
         run: |
           git push --force origin "$SYNC_BRANCH"
           if [ -z "$(gh pr list --head "$SYNC_BRANCH" --state open --json number --jq '.[].number')" ]; then
-            gh pr create --base "${{ github.event.repository.default_branch }}" --head "$SYNC_BRANCH" \
+            base="${{ github.event.repository.default_branch }}"
+            gh pr create --base "$base" --head "$SYNC_BRANCH" \
               --title "Sync Shopify app template updates" \
-              --body "New commits from $UPSTREAM_URL merged cleanly. Review the diff, run \`npm run build\`, then merge."
+              --body "New commits from $UPSTREAM_URL merged cleanly. Review the diff, run \`npm run build\`, then merge." \
+            || gh issue create --title "Shopify template update ready to merge" \
+              --body "Branch \`$SYNC_BRANCH\` merges cleanly. Open the PR: ${{ github.server_url }}/${{ github.repository }}/compare/$base...$SYNC_BRANCH?expand=1 (enable Settings > Actions > General > Allow GitHub Actions to create pull requests to skip this step)."
           fi
 
       - name: Open conflict issue
